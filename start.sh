@@ -1,7 +1,7 @@
 #!/bin/bash
 KEY_FILE="key.pem"
 HP_FILE="/opt/ml/input/config/hyperparameters.json"
-JUPYTER_DIR="/root/jupyter"
+JUPYTER_DIR="/home/aws/jupyter"
 if [ -f $HP_FILE ]; then
 	KEY=$(jq -r '.SSH_KEY_BASE64 // empty' $HP_FILE)
 	HOST=$(jq -r '.SSH_HOST // empty' $HP_FILE)
@@ -26,8 +26,8 @@ echo "Connecting to $USER@$HOST"
 if [ -z "${TOKEN}" ]; then
         TOKEN=$(head -c 6 /dev/urandom | base64)
 fi
-mkdir -p $JUPYTER_DIR
-jupyter lab --ServerApp.token $TOKEN --allow-root --no-browser --notebook-dir $JUPYTER_DIR &
+su -c "mkdir -p $JUPYTER_DIR" aws
+su -c "jupyter lab --ServerApp.token $TOKEN --allow-root --no-browser --notebook-dir $JUPYTER_DIR &" aws
  
 ssh -i $KEY_FILE -o StrictHostKeyChecking=no -o LogLevel=ERROR -N -R $MAPPED_PORT:127.0.0.1:$SSH_PORT -R $JUPYTER_PORT:127.0.0.1:8888 $USER@$HOST &
 echo "Jupyter URL at $HOST:
